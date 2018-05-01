@@ -4,8 +4,11 @@ package lock;
  * Created by M_D_Luffy on 2018/4/26.
  */
 public class LeaderServer extends Server {
-    LeaderServer(int port) {
-        super(port);
+    private String [] followerAddress;
+
+    LeaderServer(String [] address) {
+        super();
+        followerAddress = address;
     }
 
     @Override

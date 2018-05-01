@@ -7,12 +7,10 @@ import java.net.Socket;
  */
 public class FollowerServer extends Server {
     private String leaderAddress;
-    private int leaderPort;
 
-    FollowerServer(int port, String leaderAddr, int leaderP) {
-        super(port);
-        leaderAddress = leaderAddr;
-        leaderPort = leaderP;
+    FollowerServer(String address) {
+        super();
+        leaderAddress = address;
     }
 
     @Override
@@ -24,7 +22,7 @@ public class FollowerServer extends Server {
         }
         String response = String.valueOf(false);
         try {
-            Socket socket = new Socket(leaderAddress, leaderPort);
+            Socket socket = new Socket(leaderAddress, portToClient);
             InputStream inputStream = socket.getInputStream();
             OutputStream outputStream = socket.getOutputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
