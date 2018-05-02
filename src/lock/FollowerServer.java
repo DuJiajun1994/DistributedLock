@@ -14,24 +14,58 @@ public class FollowerServer extends Server {
     }
 
     @Override
-    protected String deal(String request) {
+    protected void dealClientRequest(Socket socket) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+        String request = reader.readLine();
         Message message = new Message(request);
+        boolean result;
         if(message.operation.equals("ownLock")) {
-            boolean own = ownLock(message.clientId, message.key);
-            return String.valueOf(own);
+            result = ownLock(message.clientId, message.key);
+        } else {
+            result = queryLeader(request);
         }
-        String response = String.valueOf(false);
+        writer.write(String.valueOf(result));
+    }
+
+    private boolean queryLeader(String request) {
+        boolean result = false;
+        Socket socket = null;
         try {
-            Socket socket = new Socket(leaderAddress, portToClient);
+            socket = new Socket(leaderAddress, portToServer);
             InputStream inputStream = socket.getInputStream();
             OutputStream outputStream = socket.getOutputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
             writer.write(request);
-            response = reader.readLine();
+            String response = reader.readLine();
+            result = Boolean.getBoolean(response);
         } catch(IOException e) {
             e.printStackTrace();
+        } finally {
+            if(socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-        return response;
+        return result;
+    }
+
+    @Override
+    protected void dealServerRequest(Socket socket) throws IOException {
+        InputStream inputStream = socket.getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        String response = reader.readLine();
+        Message message = new Message(response);
+        String operation = message.operation;
+        String clientId = message.clientId;
+        String key = message.key;
+        switch (operation) {
+            case "lock": locks.put(key, clientId); break;
+            case "unlock": locks.remove(key); break;
+        }
     }
 }

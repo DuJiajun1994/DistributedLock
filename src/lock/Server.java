@@ -41,18 +41,11 @@ public abstract class Server {
                 Socket socket = null;
                 try {
                     socket = serverSocket.accept();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                    String request = reader.readLine();
-                    System.out.println("Request: " + request);
-                    String response;
                     if(toClient) {
-                        response = dealClientRequest(request);
+                        dealClientRequest(socket);
                     } else {
-                        response = dealServerRequest(request);
+                        dealServerRequest(socket);
                     }
-                    System.out.println("Response: " + response);
-                    writer.write(response);
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
@@ -70,9 +63,9 @@ public abstract class Server {
         }
     }
 
-    protected abstract String dealClientRequest(String request);
+    protected abstract void dealClientRequest(Socket socket) throws IOException;
 
-    protected abstract String dealServerRequest(String request);
+    protected abstract void dealServerRequest(Socket socket) throws IOException;
 
     protected boolean ownLock(String clientId, String key) {
         String ownerId = locks.get(key);
