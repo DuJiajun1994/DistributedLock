@@ -1,6 +1,7 @@
 package lock;
 import java.io.*;
 import java.net.Socket;
+import java.util.Scanner;
 
 /**
  * Created by M_D_Luffy on 2018/4/26.
@@ -18,14 +19,17 @@ public class FollowerServer extends Server {
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         String request = reader.readLine();
+        System.out.println("Request: " + request);
         Message message = new Message(request);
         boolean result;
         if(message.operation.equals("ownLock")) {
-            result = ownLock(message.clientId, message.key);
+            result = dealLock(message);
         } else {
             result = queryLeader(request);
         }
-        writer.write(String.valueOf(result));
+        String response = String.valueOf(result);
+        System.out.println("Response: " + response);
+        writer.write(response);
     }
 
     private boolean queryLeader(String request) {
@@ -60,12 +64,14 @@ public class FollowerServer extends Server {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         String response = reader.readLine();
         Message message = new Message(response);
-        String operation = message.operation;
-        String clientId = message.clientId;
-        String key = message.key;
-        switch (operation) {
-            case "lock": locks.put(key, clientId); break;
-            case "unlock": locks.remove(key); break;
-        }
+        dealLock(message);
+    }
+
+    public static void main(String [] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("The IP address of leader server:");
+        String address = scanner.nextLine();
+        FollowerServer server = new FollowerServer(address);
+        server.start();
     }
 }

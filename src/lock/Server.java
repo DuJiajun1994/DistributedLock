@@ -15,7 +15,7 @@ public abstract class Server {
      * key: lock name
      * value: client ID
      */
-    protected HashMap<String, String> locks;
+    private HashMap<String, String> locks;
 
     Server() {
         this(8080, 8081);
@@ -27,16 +27,26 @@ public abstract class Server {
         locks = new HashMap<>();
     }
 
-    public void run() {
-        startServer(true);
-        startServer(false);
+    public void start() {
+        new Thread() {
+            @Override
+            public void run() {
+                startServer(true);
+            }
+        }.start();
+        new Thread() {
+            @Override
+            public void run() {
+                startServer(false);
+            }
+        }.start();
     }
 
     private void startServer(boolean toClient) {
+        int port = toClient ? portToClient: portToServer;
+        ServerSocket serverSocket = null;
         try {
-            int port = toClient ? portToClient: portToServer;
-            ServerSocket serverSocket = new ServerSocket(port);
-            System.out.println("Server is started");
+            serverSocket = new ServerSocket(port);
             while(true){
                 Socket socket = null;
                 try {
@@ -60,6 +70,14 @@ public abstract class Server {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if(serverSocket != null) {
+                try {
+                    serverSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -67,7 +85,32 @@ public abstract class Server {
 
     protected abstract void dealServerRequest(Socket socket) throws IOException;
 
-    protected boolean ownLock(String clientId, String key) {
+    protected synchronized boolean dealLock(Message message) {
+        boolean result = false;
+        String operation = message.operation;
+        String clientId = message.clientId;
+        String key = message.key;
+        switch (operation) {
+            case "lock": result = lock(clientId, key); break;
+            case "unlock": result = unlock(clientId, key); break;
+            case "ownLock": result = ownLock(clientId, key); break;
+        }
+        return result;
+    }
+
+    private boolean lock(String clientId, String key) {
+        if(locks.containsKey(key)) return false;
+        locks.put(key, clientId);
+        return true;
+    }
+
+    private boolean unlock(String clientId, String key) {
+        if(!ownLock(clientId, key)) return false;
+        locks.remove(key);
+        return true;
+    }
+
+    private boolean ownLock(String clientId, String key) {
         String ownerId = locks.get(key);
         return ownerId != null && ownerId.equals(clientId);
     }

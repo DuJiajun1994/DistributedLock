@@ -2,14 +2,17 @@ package lock;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 /**
  * Created by M_D_Luffy on 2018/4/26.
  */
 public class LeaderServer extends Server {
-    private String [] followerAddress;
+    private List<String> followerAddress;
 
-    LeaderServer(String [] address) {
+    LeaderServer(List<String> address) {
         super();
         followerAddress = address;
     }
@@ -31,15 +34,10 @@ public class LeaderServer extends Server {
         System.out.println("Request: " + request);
         Message message = new Message(request);
         String operation = message.operation;
-        String clientId = message.clientId;
-        String key = message.key;
-        boolean result = false;
-        switch (operation) {
-            case "lock": result = lock(clientId, key); break;
-            case "unlock": result = unlock(clientId, key); break;
-            case "ownLock": result = ownLock(clientId, key); break;
-        }
-        writer.write(String.valueOf(result));
+        boolean result = dealLock(message);
+        String response = String.valueOf(result);
+        System.out.println("Response: " + response);
+        writer.write(response);
         if(result && (operation.equals("lock") || operation.equals("unlock"))) {
             for(String address: followerAddress) {
                 notifyFollowers(address, request);
@@ -67,16 +65,16 @@ public class LeaderServer extends Server {
         }
     }
 
-    private boolean lock(String key, String clientId) {
-        if(locks.containsKey(key)) return false;
-        locks.put(key, clientId);
-        return true;
-    }
-
-    private boolean unlock(String key, String clientId) {
-        String ownerId = locks.get(key);
-        if(ownerId == null || !ownerId.equals(clientId)) return false;
-        locks.remove(key);
-        return true;
+    public static void main(String [] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("The IP address of follower servers:");
+        ArrayList<String> list = new ArrayList<>();
+        while(true) {
+            String address = scanner.nextLine();
+            if(address.equals("stop")) break;
+            list.add(address);
+        }
+        LeaderServer server = new LeaderServer(list);
+        server.start();
     }
 }

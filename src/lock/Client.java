@@ -1,6 +1,7 @@
 package lock;
 import java.io.*;
 import java.net.Socket;
+import java.util.Scanner;
 import java.util.UUID;
 
 /**
@@ -34,7 +35,7 @@ public class Client {
     }
 
     private boolean request(String operation, String key) {
-        boolean success = false;
+        boolean result = false;
         Socket socket = null;
         try {
             socket = new Socket(serverAddress, serverPort);
@@ -45,7 +46,7 @@ public class Client {
             Message message = new Message(operation, id, key);
             writer.write(message.toString());
             String response = reader.readLine();
-            success = Boolean.getBoolean(response);
+            result = Boolean.getBoolean(response);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -57,10 +58,29 @@ public class Client {
                 }
             }
         }
-        return success;
+        return result;
     }
 
     public static void main(String [] args) {
-
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("The IP address of the server to connect:");
+        String address = scanner.nextLine();
+        Client client = new Client(address);
+        System.out.println("Lock command:");
+        while(true) {
+            String command = scanner.nextLine();
+            if(command.equals("stop")) break;
+            String [] a = command.split(" ");
+            String operation = a[0];
+            String key = a[1];
+            boolean result = false;
+            switch (operation) {
+                case "lock": result = client.lock(key); break;
+                case "unlock": result = client.unlock(key); break;
+                case "ownLock": result = client.ownLock(key); break;
+            }
+            String response = result ? "success" : "fail";
+            System.out.println(response);
+        }
     }
 }
