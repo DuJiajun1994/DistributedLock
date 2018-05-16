@@ -80,7 +80,12 @@ public class Client {
                 case "unlock": result = client.unlock(key); break;
                 case "ownLock": result = client.ownLock(key); break;
             }
-            String response = result ? "success" : "fail";
+            String response;
+            if(operation.equals("ownLock")) {
+                response = result ? "yes" : "no";
+            } else {
+                response = result ? "success" : "fail";
+            }
             System.out.println(response);
         }
     }
