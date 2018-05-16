@@ -18,7 +18,7 @@ public abstract class Server {
     private HashMap<String, String> locks;
 
     Server() {
-        this(8080, 8081);
+        this(8085, 8086);
     }
 
     Server(int ptc, int pts) {

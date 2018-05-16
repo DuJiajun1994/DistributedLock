@@ -13,7 +13,7 @@ public class Client {
     private String id;
 
     Client(String address) {
-        this(address, 8080);
+        this(address, 8085);
     }
 
     Client(String address, int port) {
@@ -44,9 +44,10 @@ public class Client {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
             Message message = new Message(operation, id, key);
-            writer.write(message.toString());
+            writer.write(message.toString() + "\n");
+            writer.flush();
             String response = reader.readLine();
-            result = Boolean.getBoolean(response);
+            result = Boolean.parseBoolean(response);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {

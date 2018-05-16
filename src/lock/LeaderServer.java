@@ -37,7 +37,8 @@ public class LeaderServer extends Server {
         boolean result = dealLock(message);
         String response = String.valueOf(result);
         System.out.println("Response: " + response);
-        writer.write(response);
+        writer.write(response + "\n");
+        writer.flush();
         if(result && (operation.equals("lock") || operation.equals("unlock"))) {
             for(String address: followerAddress) {
                 notifyFollowers(address, request);
@@ -51,7 +52,8 @@ public class LeaderServer extends Server {
             socket = new Socket(address, portToServer);
             OutputStream outputStream = socket.getOutputStream();
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
-            writer.write(message);
+            writer.write(message + "\n");
+            writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {

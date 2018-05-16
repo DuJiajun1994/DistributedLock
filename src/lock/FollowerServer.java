@@ -29,7 +29,8 @@ public class FollowerServer extends Server {
         }
         String response = String.valueOf(result);
         System.out.println("Response: " + response);
-        writer.write(response);
+        writer.write(response + "\n");
+        writer.flush();
     }
 
     private boolean queryLeader(String request) {
@@ -41,9 +42,10 @@ public class FollowerServer extends Server {
             OutputStream outputStream = socket.getOutputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
-            writer.write(request);
+            writer.write(request + "\n");
+            writer.flush();
             String response = reader.readLine();
-            result = Boolean.getBoolean(response);
+            result = Boolean.parseBoolean(response);
         } catch(IOException e) {
             e.printStackTrace();
         } finally {
